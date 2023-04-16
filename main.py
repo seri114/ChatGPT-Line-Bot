@@ -213,6 +213,25 @@ def handle_text_message(event):
             msg = TextSendMessage(text='要約するURLを入力してください。')
         else:
             user_model = get_model(user_id)
+
+            text=("""
+            # 命令書：
+            あなたは、ChatGPTです。
+            以下の制約条件をもとに、返信および、それに対する質問者の返信例を出力してください。
+
+            # 制約条件：
+            ・文字数は300字程度
+            ・小学生にもわかりやすく
+            ・返信例は最大4つ。それぞれ20字以内
+            ・重要なキーワードを取り残さない
+            ・文章を簡潔に
+            # 入力分:
+            """ + text +
+            """
+            # 出力文：
+            {"reply":"...","reply sample1":"...", ...}
+            """)[1:-1]
+            text = textwrap.dedent(text)
             memory.append(user_id, 'user', text)
             is_successful, response, error_message = user_model.chat_completions(memory.get(user_id), os.getenv('OPENAI_MODEL_ENGINE'))
             if not is_successful:
@@ -232,24 +251,6 @@ def handle_text_message(event):
             msg = TextSendMessage(text='同時使用人数を超えました。しばらく待ってからお試しください。')
         else:
             msg = TextSendMessage(text=str(e))
-    msg=("""
-    # 命令書：
-    あなたは、ChatGPTです。
-    以下の制約条件をもとに、返信および、それに対する質問者の返信例を出力してください。
-
-    # 制約条件：
-    ・文字数は300字程度
-    ・小学生にもわかりやすく
-    ・返信例は最大4つ。それぞれ20字以内
-    ・重要なキーワードを取り残さない
-    ・文章を簡潔に
-    # 入力分:
-    """ + msg +
-    """
-    # 出力文：
-    {"reply":"...","reply sample1":"...", ...}
-    """)[1:-1]
-    msg = TextSendMessage(text=textwrap.dedent(text))
     line_bot_api.reply_message(event.reply_token, msg)
 
 
