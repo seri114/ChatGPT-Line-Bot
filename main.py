@@ -2,6 +2,7 @@ import textwrap
 from dotenv import load_dotenv
 from flask import Flask, request, abort
 from waitress import serve
+import json
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -76,6 +77,15 @@ def handle_text_message(event):
     user_id = event.source.user_id
     text = str(event.message.text.strip())
     logger.info(f'{user_id}: {text}')
+
+    def get_reply_and_reply_samples(json_data: str):
+        # JSONデータをPythonオブジェクトに変換
+        parsed_json = json.loads(json_data)
+
+        # replyとreply_samplesの取得
+        reply = parsed_json['reply']
+        reply_samples = [parsed_json[key] for key in parsed_json.keys() if key.startswith('reply sample')]
+        return reply, reply_samples
 
     try:
         def setup_token(api_key:str):
@@ -237,8 +247,11 @@ def handle_text_message(event):
             if not is_successful:
                 raise Exception(error_message)
             role, response = get_role_and_content(response)
-            msg = TextSendMessage(text=response)
-            memory.append(user_id, role, response)
+            reply, samples = get_reply_and_reply_samples(response)
+
+            items = [QuickReplyButton(action=MessageAction(label=s, text=s)) for s in samples]
+            msg = TextSendMessage(text=reply, quick_reply=QuickReply(items=items))
+            memory.append(user_id, role, reply)
     except ValueError:
         msg = TextSendMessage(text='Token が無効です。以下のフォーマットで入力してください。 /token sk-xxxxx')
     except KeyError:
