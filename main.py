@@ -255,7 +255,9 @@ def handle_text_message(event):
             """)[1:-1]
             text = textwrap.dedent(text)
             memory.append(user_id, 'user', text)
-            is_successful, response, error_message = user_model.chat_completions(memory.get(user_id), os.getenv('OPENAI_MODEL_ENGINE'))
+            comp = memory.get(user_id)
+            logger.info(json.dumps(comp))
+            is_successful, response, error_message = user_model.chat_completions(comp, os.getenv('OPENAI_MODEL_ENGINE'))
             if not is_successful:
                 raise Exception(error_message)
             role, response = get_role_and_content(response)
