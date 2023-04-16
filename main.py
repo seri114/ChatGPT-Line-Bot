@@ -146,15 +146,15 @@ def handle_text_message(event):
 
         elif text.startswith('/help'):
             text = '''
-            ChatGPTをLINEから手軽に使えます。
-            そのままメッセージを入力してください。
+            このままチャットすれば、ChatGPTをお手軽に使えます。✨
+            。
             以下のコマンドも使えます。
 
             /help このヘルプメッセージを表示します。
-            /image 画像生成のプロンプトを入力します。
-            /token API Tokenを入力します。https://platform.openai.com/ に登録することで取得できます。
+            /image 画像生成のプロンプトを英語で入力します。
             /url 指定したURLを要約します。
-            /clear ２つ前までの履歴をChatGPTに入れてますが、その履歴をクリアします。
+            /clear ２つ前までのチャット履歴を覚えてますが、その履歴をクリアします。
+            /token カスタムのAPI Tokenを入力します。https://platform.openai.com/ に登録することで取得できます。
             '''[1:-1]
             msg = TextSendMessage(text=textwrap.dedent(text))
 
