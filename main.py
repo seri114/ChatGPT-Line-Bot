@@ -259,8 +259,8 @@ def handle_text_message(event):
                 return text
 
             memory.append(user_id, 'user', text)
-            comp = memory.get(user_id)
-            comp = copy.copy(comp)
+            ret = memory.get(user_id)
+            comp = copy.deepcopy(ret)
             last = comp.pop()
             logger.info("送信ログ:\n" + json.dumps(comp))
             last["content"]=wrap_msg(last["content"])
