@@ -236,26 +236,31 @@ def handle_text_message(event):
         else:
             user_model = get_model(user_id)
 
-            text=("""
-            # 命令書：
-            あなたは、ChatGPTです。
-            以下の制約条件をもとに、返信および、それに対する質問者の返信例を出力してください。
+            def wrap_msg(msg):
+                text=("""
+                # 命令書：
+                あなたは、ChatGPTです。
+                以下の制約条件をもとに、返信および、それに対する質問者の返信例を出力してください。
 
-            # 制約条件：
-            ・文字数は300字程度
-            ・小学生にもわかりやすく
-            ・返信例は最大4つ。それぞれ20字以内
-            ・重要なキーワードを取り残さない
-            ・文章を簡潔に
-            # 入力分:
-            """ + text +
-            """
-            # 出力文：
-            {"reply":"...","reply sample1":"...", ...}
-            """)[1:-1]
-            text = textwrap.dedent(text)
+                # 制約条件：
+                ・文字数は300字程度
+                ・小学生にもわかりやすく
+                ・返信例は最大4つ。それぞれ20字以内
+                ・重要なキーワードを取り残さない
+                ・文章を簡潔に
+                # 入力分:
+                """ + msg +
+                """
+                # 出力文：
+                {"reply":"...","reply sample1":"...", ...}
+                """)[1:-1]
+                text = textwrap.dedent(text)
+                return text
+
             memory.append(user_id, 'user', text)
             comp = memory.get(user_id)
+            last = comp[-1]
+            last["contents"]=wrap_msg(last["contents"])
             logger.info("送信ログ:\n" + json.dumps(comp))
             is_successful, response, error_message = user_model.chat_completions(comp, os.getenv('OPENAI_MODEL_ENGINE'))
             if not is_successful:
