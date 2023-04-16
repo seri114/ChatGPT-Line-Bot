@@ -1,5 +1,6 @@
 import textwrap
 from dotenv import load_dotenv
+import re
 from flask import Flask, request, abort
 from waitress import serve
 import json
@@ -78,7 +79,18 @@ def handle_text_message(event):
     text = str(event.message.text.strip())
     logger.info(f'{user_id}: {text}')
 
-    def get_reply_and_reply_samples(json_data: str):
+    def get_reply_and_reply_samples(string_with_json: str):
+
+        # 正規表現パターン
+        pattern = r'{.*}'
+
+        # 正規表現にマッチする部分を抽出
+        match = re.search(pattern, json_data)
+
+        if match:
+            json_data = match.group()
+        else:
+            return json_data, []
         # JSONデータをPythonオブジェクトに変換
         parsed_json = json.loads(json_data)
 
@@ -248,7 +260,7 @@ def handle_text_message(event):
                 raise Exception(error_message)
             role, response = get_role_and_content(response)
             reply, samples = get_reply_and_reply_samples(response)
-
+            logger.log(f"{reply} {samples}")
             items = [QuickReplyButton(action=MessageAction(label=s, text=s)) for s in samples]
             msg = TextSendMessage(text=reply, quick_reply=QuickReply(items=items))
             memory.append(user_id, role, reply)
