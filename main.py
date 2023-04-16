@@ -93,11 +93,11 @@ def handle_text_message(event):
             # setup_token(user_id, api_key)
             api_key = text
             setup_token(user_id, api_key)
-            msg = TextSendMessage(text=f'トークンを入力しました。¥n{api_key}')
+            msg = TextSendMessage(text=f'トークンを入力しました。\n{api_key}')
         elif cmd == OpenAIModelCmd.SET_SYSTEM_PROMPT:
             system_prompt = text
             memory.change_system_message(user_id, system_message=system_prompt)
-            msg = TextSendMessage(text=f'システムプロンプトを変更しました:¥n{system_prompt}')
+            msg = TextSendMessage(text=f'システムプロンプトを変更しました:\n{system_prompt}')
         elif cmd == OpenAIModelCmd.SET_IMAGE_PROMPT:
             prompt = text
             memory.append(user_id, 'user', prompt)
@@ -159,7 +159,7 @@ def handle_text_message(event):
 
         elif text.startswith('/system'):
             get_model(user_id).set_command(OpenAIModelCmd.SET_SYSTEM_PROMPT)
-            msg = TextSendMessage(text='システムメッセージを入力してください。¥n¥n例1 あなたは有能な弁護士です。¥n例2 あなたは優秀な小学生の家庭教師です。')
+            msg = TextSendMessage(text='システムメッセージを入力してください。\n\n例1 あなたは有能な弁護士です。\n例2 あなたは優秀な小学生の家庭教師です。')
             # memory.change_system_message(user_id, text[5:].strip())
             # msg = TextSendMessage(text='システムプロンプトを入力しました。')
 
@@ -169,7 +169,7 @@ def handle_text_message(event):
 
         elif text.startswith('/image'):
             get_model(user_id).set_command(OpenAIModelCmd.SET_IMAGE_PROMPT)
-            msg = TextSendMessage(text='どんな画像を生成しますか？¥n¥n例 椅子の上に寝ている可愛い三毛猫の赤ちゃん')
+            msg = TextSendMessage(text='どんな画像を生成しますか？\n\n例 椅子の上に寝ている可愛い三毛猫の赤ちゃん')
             # prompt = text[3:].strip()
             # memory.append(user_id, 'user', prompt)
             # is_successful, response, error_message = get_model(user_id).image_generations(prompt)
