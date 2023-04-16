@@ -90,7 +90,7 @@ def handle_text_message(event):
         if match:
             json_data = match.group()
         else:
-            return json_data, []
+            return string_with_json, []
         # JSONデータをPythonオブジェクトに変換
         parsed_json = json.loads(json_data)
 
