@@ -98,7 +98,7 @@ def handle_text_message(event):
         # replyとreply_samplesの取得
         reply = parsed_json['reply']
         reply_samples = [parsed_json[key] for key in parsed_json.keys() if key.startswith('reply sample')]
-        reply_samples = list(filter(lambda x: len(x)>0, reply_samples)))
+        reply_samples = list(filter(lambda x: len(x)>0, reply_samples))
         return reply, reply_samples
 
     try:
