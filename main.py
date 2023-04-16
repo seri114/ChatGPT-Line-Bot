@@ -83,10 +83,10 @@ def handle_text_message(event):
     def get_reply_and_reply_samples(string_with_json: str):
 
         # 正規表現パターン
-        pattern = re.compile(r'\{(?:[^{}]|(?R))*\}', re.DOTALL)
+        pattern = r'{[\s\S]*}'
 
         # 正規表現にマッチする部分を抽出
-        match = pattern.search(string_with_json)
+        match = re.search(pattern, string_with_json)
 
         if match:
             json_data = match.group()
