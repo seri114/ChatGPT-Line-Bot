@@ -260,7 +260,7 @@ def handle_text_message(event):
                 raise Exception(error_message)
             role, response = get_role_and_content(response)
             reply, samples = get_reply_and_reply_samples(response)
-            logger.log(f"{reply} {samples}")
+            logger.info(f"{reply} {samples}")
             items = [QuickReplyButton(action=MessageAction(label=s, text=s)) for s in samples]
             msg = TextSendMessage(text=reply, quick_reply=QuickReply(items=items))
             memory.append(user_id, role, reply)
