@@ -262,9 +262,9 @@ def handle_text_message(event):
             ret = memory.get(user_id)
             comp = copy.deepcopy(ret)
             last = comp.pop()
-            logger.info("送信ログ:\n" + json.dumps(comp))
             last["content"]=wrap_msg(last["content"])
             comp.append(last)
+            logger.info("送信ログ:\n" + json.dumps(comp))
             is_successful, response, error_message = user_model.chat_completions(comp, os.getenv('OPENAI_MODEL_ENGINE'))
             if not is_successful:
                 raise Exception(error_message)
