@@ -1,3 +1,4 @@
+import copy
 import textwrap
 from dotenv import load_dotenv
 import re
@@ -259,6 +260,7 @@ def handle_text_message(event):
 
             memory.append(user_id, 'user', text)
             comp = memory.get(user_id)
+            comp = copy.copy(comp)
             last = comp.pop()
             logger.info("送信ログ:\n" + json.dumps(comp))
             last["content"]=wrap_msg(last["content"])
