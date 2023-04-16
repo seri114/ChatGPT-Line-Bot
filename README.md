@@ -19,7 +19,7 @@
 ## 安裝步驟
 ### Token 取得
 1. 取得 OpenAI 給的 API Token：
-    1. [OpenAI](https://beta.openai.com/) 平台中註冊/登入帳號
+    1. [OpenAI](https://beta.openai.com/) 平台中token/登入帳號
     2. 右上方有一個頭像，點入後選擇 `View API keys`
     3. 點選中間的 `Create new secret key` -> 生成後即為 `OPENAI_API` （稍晚會用到）
     - 注意：每隻 API 有免費額度，也有其限制，詳情請看 [OpenAI Pricing](https://openai.com/api/pricing/)
@@ -34,7 +34,7 @@
 
 ### 專案設置
 1. Fork Github 專案：
-    1. 註冊/登入 [GitHub](https://github.com/)
+    1. token/登入 [GitHub](https://github.com/)
     2. 進入 [ChatGPT-Line-Bot](https://github.com/TheExplainthis/ChatGPT-Line-Bot)
     3. 點選 `Star` 支持開發者
     4. 點選 `Fork` 複製全部的程式碼到自己的倉庫
@@ -69,7 +69,7 @@
     5. 將下方 `Auto-reply messages` 關閉
     - 注意：若一小時內沒有任何請求，則程式會中斷，因此需要下步驟
 3. CronJob 定時發送請求
-    1. 註冊/登入 [cron-job.org](https://cron-job.org/en/)
+    1. token/登入 [cron-job.org](https://cron-job.org/en/)
     2. 進入後面板右上方選擇 `CREATE CRONJOB`
     3. `Title` 輸入 `ChatGPT-Line-Bot`，網址輸入上一步驟的網址，例如：`https://ChatGPT-Line-Bot.explainthis.repl.co/`
     4. 下方則每 `5 分鐘` 打一次
@@ -80,11 +80,11 @@
 
 | 指令 | 說明 |
 | --- | ----- |
-| `/註冊` | 在輸入框輸入 `/註冊 ` + OpenAI API Token，就可以註冊 Token|
-| `/系統訊息` | 在輸入框輸入 `/系統訊息 ` + 可以設定希望 ChatGPT 扮演什麼角色|
-| `/清除` | 在輸入框輸入 `/清除 `，就可以清除歷史訊息|
-| `/圖像` | 在輸入框輸入 `/圖像` + 指令，就會調用 DALL·E 2 模型，即可生成圖像。|
-| 語音輸入 | 利用語音輸入，系統會自動將語音翻譯成文字，並且 ChatGPT 以文字回應| 
+| `/token` | 在輸入框輸入 `/token ` + OpenAI API Token，就可以token Token|
+| `/system` | 在輸入框輸入 `/system ` + 可以設定希望 ChatGPT 扮演什麼角色|
+| `/clear` | 在輸入框輸入 `/clear `，就可以清除歷史訊息|
+| `/image` | 在輸入框輸入 `/image` + 指令，就會調用 DALL·E 2 模型，即可生成圖像。|
+| 音声入力 | 利用音声入力，系統會自動將語音翻譯成文字，並且 ChatGPT 以文字回應| 
 | 其他文字輸入 | 直接輸入文字，則會進入一般的 ChatGPT 對話模式|
 
 

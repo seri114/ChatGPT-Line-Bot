@@ -26,6 +26,7 @@ load_dotenv('.env')
 app = Flask(__name__)
 line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN'))
 handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
+default_open_ai_token = os.getenv('DEFAULT_OPEN_AI_TOKEN')
 storage = None
 youtube = Youtube(step=4)
 website = Website()
@@ -35,6 +36,25 @@ memory = Memory(system_message=os.getenv('SYSTEM_MESSAGE'), memory_message_count
 model_management = {}
 api_keys = {}
 
+def setup_token(user_id: str, api_key:str):
+    model = OpenAIModel(api_key=api_key)
+    is_successful, _, _ = model.check_token_valid()
+    if not is_successful:
+        raise ValueError('Invalid API token')
+    model_management[user_id] = model
+    storage.save({
+        user_id: api_key
+    })
+
+def get_model(user_id: str):
+    if user_id in model_management:
+        return model_management[user_id]
+    else:
+        if not default_open_ai_token:
+            logger.error("invalid system token")
+            raise KeyError()
+        setup_token(user_id, default_open_ai_token)
+        return model_management[user_id]
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -56,8 +76,7 @@ def handle_text_message(event):
     logger.info(f'{user_id}: {text}')
 
     try:
-        if text.startswith('/註冊'):
-            api_key = text[3:].strip()
+        def setup_token(api_key:str):
             model = OpenAIModel(api_key=api_key)
             is_successful, _, _ = model.check_token_valid()
             if not is_successful:
@@ -66,23 +85,26 @@ def handle_text_message(event):
             storage.save({
                 user_id: api_key
             })
-            msg = TextSendMessage(text='Token 有效，註冊成功')
+        if text.startswith('/token'):
+            api_key = text[3:].strip()
+            setup_token(user_id, api_key)
+            msg = TextSendMessage(text='Token Enabled.')
 
-        elif text.startswith('/指令說明'):
-            msg = TextSendMessage(text="指令：\n/註冊 + API Token\n👉 API Token 請先到 https://platform.openai.com/ 註冊登入後取得\n\n/系統訊息 + Prompt\n👉 Prompt 可以命令機器人扮演某個角色，例如：請你扮演擅長做總結的人\n\n/清除\n👉 當前每一次都會紀錄最後兩筆歷史紀錄，這個指令能夠清除歷史訊息\n\n/圖像 + Prompt\n👉 會調用 DALL∙E 2 Model，以文字生成圖像\n\n語音輸入\n👉 會調用 Whisper 模型，先將語音轉換成文字，再調用 ChatGPT 以文字回覆\n\n其他文字輸入\n👉 調用 ChatGPT 以文字回覆")
+        elif text.startswith('/help'):
+            msg = TextSendMessage(text="説明：\n/token + API Token\n👉API Tokenは、https://platform.openai.com/ に登録することで取得できます。\n\n/system + Prompt\n👉 Prompt 要約が得意な人になってもらうなど、ある役割をロボットに命令することができます\n\n/clear\n👉 現在、それぞれのケースで過去2回の履歴が記録されていますが、このコマンドは履歴情報をクリアするものです。\n\n/image + Prompt\n👉 DALL∙E 2 モデルを使ってテキストから画像を生成します。\n\n音声入力\n👉 Whisperモデルが呼び出されて音声がテキストに変換され、次にChatGPTが呼び出されてテキストで返信されます。\n\nその他のテキスト入力\n👉 ChatGPTに文字を入力")
 
-        elif text.startswith('/系統訊息'):
+        elif text.startswith('/system'):
             memory.change_system_message(user_id, text[5:].strip())
-            msg = TextSendMessage(text='輸入成功')
+            msg = TextSendMessage(text='システムプロンプトを入力しました。')
 
-        elif text.startswith('/清除'):
+        elif text.startswith('/clear'):
             memory.remove(user_id)
-            msg = TextSendMessage(text='歷史訊息清除成功')
+            msg = TextSendMessage(text='履歴のクリアに成功しました。')
 
-        elif text.startswith('/圖像'):
+        elif text.startswith('/image'):
             prompt = text[3:].strip()
             memory.append(user_id, 'user', prompt)
-            is_successful, response, error_message = model_management[user_id].image_generations(prompt)
+            is_successful, response, error_message = get_model(user_id).image_generations(prompt)
             if not is_successful:
                 raise Exception(error_message)
             url = response['data'][0]['url']
@@ -93,7 +115,7 @@ def handle_text_message(event):
             memory.append(user_id, 'assistant', url)
 
         else:
-            user_model = model_management[user_id]
+            user_model = get_model(user_id)
             memory.append(user_id, 'user', text)
             url = website.get_url_from_text(text)
             if url:
@@ -110,7 +132,7 @@ def handle_text_message(event):
                 else:
                     chunks = website.get_content_from_url(url)
                     if len(chunks) == 0:
-                        raise Exception('無法撈取此網站文字')
+                        raise Exception('このサイトからテキストを取得できませんでした。')
                     website_reader = WebsiteReader(user_model, os.getenv('OPENAI_MODEL_ENGINE'))
                     is_successful, response, error_message = website_reader.summarize(chunks)
                     if not is_successful:
@@ -125,15 +147,15 @@ def handle_text_message(event):
                 msg = TextSendMessage(text=response)
             memory.append(user_id, role, response)
     except ValueError:
-        msg = TextSendMessage(text='Token 無效，請重新註冊，格式為 /註冊 sk-xxxxx')
+        msg = TextSendMessage(text='Token が無効です。以下のフォーマットで入力してください。 /token sk-xxxxx')
     except KeyError:
-        msg = TextSendMessage(text='請先註冊 Token，格式為 /註冊 sk-xxxxx')
+        msg = TextSendMessage(text='トークンを先に登録してください。/token sk-xxxxx の形式で登録してください。')
     except Exception as e:
         memory.remove(user_id)
         if str(e).startswith('Incorrect API key provided'):
-            msg = TextSendMessage(text='OpenAI API Token 有誤，請重新註冊。')
+            msg = TextSendMessage(text='OpenAI API Token が正しくありません。/token sk-xxxxx の形式で登録してください。')
         elif str(e).startswith('That model is currently overloaded with other requests.'):
-            msg = TextSendMessage(text='已超過負荷，請稍後再試')
+            msg = TextSendMessage(text='同時使用人数を超えました。しばらく待ってからお試しください。')
         else:
             msg = TextSendMessage(text=str(e))
     line_bot_api.reply_message(event.reply_token, msg)
@@ -149,27 +171,24 @@ def handle_audio_message(event):
             fd.write(chunk)
 
     try:
-        if not model_management.get(user_id):
-            raise ValueError('Invalid API token')
-        else:
-            is_successful, response, error_message = model_management[user_id].audio_transcriptions(input_audio_path, 'whisper-1')
-            if not is_successful:
-                raise Exception(error_message)
-            memory.append(user_id, 'user', response['text'])
-            is_successful, response, error_message = model_management[user_id].chat_completions(memory.get(user_id), 'gpt-3.5-turbo')
-            if not is_successful:
-                raise Exception(error_message)
-            role, response = get_role_and_content(response)
-            memory.append(user_id, role, response)
-            msg = TextSendMessage(text=response)
+        is_successful, response, error_message = get_model(user_id).audio_transcriptions(input_audio_path, 'whisper-1')
+        if not is_successful:
+            raise Exception(error_message)
+        memory.append(user_id, 'user', response['text'])
+        is_successful, response, error_message = get_model(user_id).chat_completions(memory.get(user_id), 'gpt-3.5-turbo')
+        if not is_successful:
+            raise Exception(error_message)
+        role, response = get_role_and_content(response)
+        memory.append(user_id, role, response)
+        msg = TextSendMessage(text=response)
     except ValueError:
-        msg = TextSendMessage(text='請先註冊你的 API Token，格式為 /註冊 [API TOKEN]')
+        msg = TextSendMessage(text='最初に /token sk-xxxxx の形式でトークンを登録してください。')
     except KeyError:
-        msg = TextSendMessage(text='請先註冊 Token，格式為 /註冊 sk-xxxxx')
+        msg = TextSendMessage(text='最初に /token sk-xxxxx の形式でトークンを登録してください。')
     except Exception as e:
         memory.remove(user_id)
         if str(e).startswith('Incorrect API key provided'):
-            msg = TextSendMessage(text='OpenAI API Token 有誤，請重新註冊。')
+            msg = TextSendMessage(text='OpenAI API Token が正しくありません。/token sk-xxxxx の形式で登録してください。')
         else:
             msg = TextSendMessage(text=str(e))
     os.remove(input_audio_path)

@@ -81,10 +81,10 @@ To start a conversation with ChatGPT, simply type your message in the text input
 
 | Command | Description |
 | ------- | ----------- |
-| `/註冊` | Enter `/註冊` + OpenAI API Token in the input box to register your token|
-| `/系統訊息` | Enter `/系統訊息` + the role you want ChatGPT to play in the input box|
-| `/清除` | Enter `/清除` in the input box to clear the chat history|
-| `/圖像` | Enter `/圖像` + command in the input box to call the DALL·E 2 model and generate an image|
+| `/token` | Enter `/token` + OpenAI API Token in the input box to register your token|
+| `/system` | Enter `/system` + the role you want ChatGPT to play in the input box|
+| `/clear` | Enter `/clear` in the input box to clear the chat history|
+| `/image` | Enter `/image` + command in the input box to call the DALL·E 2 model and generate an image|
 | Voice input | Use voice input, the system will automatically translate the voice into text, and ChatGPT will respond in text| 
 | Text input | Directly input text to enter the normal ChatGPT conversation mode|
 

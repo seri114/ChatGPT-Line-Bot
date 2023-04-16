@@ -36,7 +36,7 @@ class OpenAIModel(ModelInterface):
             if r.get('error'):
                 return False, None, r.get('error', {}).get('message')
         except Exception:
-            return False, None, 'OpenAI API 系統不穩定，請稍後再試'
+            return False, None, 'OpenAI API システムが不安定なため、後で再試行してください。'
         return True, r, None
 
     def check_token_valid(self):
