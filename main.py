@@ -9,7 +9,7 @@ from linebot.exceptions import (
     InvalidSignatureError
 )
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, ImageSendMessage, AudioMessage
+    MessageEvent, TextMessage, TextSendMessage, ImageSendMessage, AudioMessage, QuickReplyButton, MessageAction, QuickReply
 )
 import os
 import uuid
@@ -147,7 +147,45 @@ def handle_text_message(event):
             system_prompt = text
             memory.change_system_message(user_id, system_message=os.getenv('SYSTEM_MESSAGE'))
             msg = TextSendMessage(text=f'システムメッセージを初期状態に戻しました。')
-
+        elif text.startswith('/help2'):
+            msg={
+                "type": "text",
+                "text": "Select your favorite food category or send me your location!",
+                "quickReply": {
+                    "items": [
+                    {
+                        "type": "action",
+                        "imageUrl": "https://example.com/sushi.png",
+                        "action": {
+                        "type": "message",
+                        "label": "Sushi",
+                        "text": "Sushi"
+                        }
+                    },
+                    {
+                        "type": "action",
+                        "imageUrl": "https://example.com/tempura.png",
+                        "action": {
+                        "type": "message",
+                        "label": "Tempura",
+                        "text": "Tempura"
+                        }
+                    },
+                    {
+                        "type": "action",
+                        "action": {
+                        "type": "location",
+                        "label": "Send location"
+                        }
+                    }
+                    ]
+                }
+            }
+            language_list = ["Ruby", "Python", "PHP", "Java", "C"]
+            items = [QuickReplyButton(action=MessageAction(label=f"{language}", text=f"{language}が好き")) for language in language_list]
+            
+            msg = TextSendMessage(text="どの言語が好きですか？",
+                                    quick_reply=QuickReply(items=items))
         elif text.startswith('/help'):
             text = '''
             このままチャットすればChatGPTをお手軽に使えます✨
