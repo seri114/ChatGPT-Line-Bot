@@ -97,7 +97,7 @@ def handle_text_message(event):
         elif cmd == OpenAIModelCmd.SET_SYSTEM_PROMPT:
             system_prompt = text
             memory.change_system_message(user_id, system_message=system_prompt)
-            msg = TextSendMessage(text=f'システムプロンプトを変更しました:\n{system_prompt}')
+            msg = TextSendMessage(text=f'システムメッセージを変更しました:\n{system_prompt}')
         elif cmd == OpenAIModelCmd.SET_IMAGE_PROMPT:
             prompt = text
             memory.append(user_id, 'user', prompt)
@@ -143,6 +143,10 @@ def handle_text_message(event):
             # api_key = text[3:].strip()
             # setup_token(user_id, api_key)
             msg = TextSendMessage(text='トークンを入力してください。')
+        elif text.startswith('/reset_system_message'):
+            system_prompt = text
+            memory.change_system_message(user_id, system_message=os.getenv('SYSTEM_MESSAGE'))
+            msg = TextSendMessage(text=f'システムメッセージを初期状態に戻しました。')
 
         elif text.startswith('/help'):
             text = '''
@@ -152,6 +156,7 @@ def handle_text_message(event):
             /image 画像の生成をします。
             /url 指定したURLを要約します。
             /system システムメッセージを入力します。例：あなたは有能な弁護士です。
+            /reset_system_message システムメッセージを初期状態に戻します。
             /clear ２つ前までのチャット履歴を覚えてますが、その履歴をクリアします。
             /token カスタムのAPI Tokenを入力します。https://platform.openai.com/ に登録すれば取得できます。
             '''[1:-1]
