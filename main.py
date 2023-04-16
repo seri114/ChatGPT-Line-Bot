@@ -144,7 +144,18 @@ def handle_text_message(event):
             msg = TextSendMessage(text='トークンを入力してください。')
 
         elif text.startswith('/help'):
-            msg = TextSendMessage(text="説明：\n/token + API Token\n👉API Tokenは、https://platform.openai.com/ に登録することで取得できます。\n\n/system + Prompt\n👉 Prompt 要約が得意な人になってもらうなど、ある役割をロボットに命令することができます\n\n/clear\n👉 現在、それぞれのケースで過去2回の履歴が記録されていますが、このコマンドは履歴情報をクリアするものです。\n\n/image + Prompt\n👉 DALL∙E 2 モデルを使ってテキストから画像を生成します。\n\n音声入力\n👉 Whisperモデルが呼び出されて音声がテキストに変換され、次にChatGPTが呼び出されてテキストで返信されます。\n\nその他のテキスト入力\n👉 ChatGPTに文字を入力")
+            text = '''
+            ChatGPTをLINEから手軽に使えます。
+            そのままメッセージを入力してください。
+            以下のコマンドも使えます。
+
+            /help このヘルプメッセージを表示します。
+            /image 画像生成のプロンプトを入力します。
+            /token API Tokenを入力します。https://platform.openai.com/ に登録することで取得できます。
+            /url 指定したURLを要約します。
+            /clear ２つ前までの履歴をChatGPTに入れてますが、その履歴をクリアします。
+            '''[1:-1]
+            msg = TextSendMessage(text=text)
 
         elif text.startswith('/system'):
             get_model(user_id).set_command(OpenAIModelCmd.SET_SYSTEM_PROMPT)
@@ -200,34 +211,35 @@ def handle_text_message(event):
 @handler.add(MessageEvent, message=AudioMessage)
 def handle_audio_message(event):
     user_id = event.source.user_id
-    audio_content = line_bot_api.get_message_content(event.message.id)
-    input_audio_path = f'{str(uuid.uuid4())}.m4a'
-    with open(input_audio_path, 'wb') as fd:
-        for chunk in audio_content.iter_content():
-            fd.write(chunk)
+    # audio_content = line_bot_api.get_message_content(event.message.id)
+    # input_audio_path = f'{str(uuid.uuid4())}.m4a'
+    # with open(input_audio_path, 'wb') as fd:
+    #     for chunk in audio_content.iter_content():
+    #         fd.write(chunk)
 
-    try:
-        is_successful, response, error_message = get_model(user_id).audio_transcriptions(input_audio_path, 'whisper-1')
-        if not is_successful:
-            raise Exception(error_message)
-        memory.append(user_id, 'user', response['text'])
-        is_successful, response, error_message = get_model(user_id).chat_completions(memory.get(user_id), 'gpt-3.5-turbo')
-        if not is_successful:
-            raise Exception(error_message)
-        role, response = get_role_and_content(response)
-        memory.append(user_id, role, response)
-        msg = TextSendMessage(text=response)
-    except ValueError:
-        msg = TextSendMessage(text='最初に /token sk-xxxxx の形式でトークンを登録してください。')
-    except KeyError:
-        msg = TextSendMessage(text='最初に /token sk-xxxxx の形式でトークンを登録してください。')
-    except Exception as e:
-        memory.remove(user_id)
-        if str(e).startswith('Incorrect API key provided'):
-            msg = TextSendMessage(text='OpenAI API Token が正しくありません。/token sk-xxxxx の形式で登録してください。')
-        else:
-            msg = TextSendMessage(text=str(e))
-    os.remove(input_audio_path)
+    # try:
+    #     is_successful, response, error_message = get_model(user_id).audio_transcriptions(input_audio_path, 'whisper-1')
+    #     if not is_successful:
+    #         raise Exception(error_message)
+    #     memory.append(user_id, 'user', response['text'])
+    #     is_successful, response, error_message = get_model(user_id).chat_completions(memory.get(user_id), 'gpt-3.5-turbo')
+    #     if not is_successful:
+    #         raise Exception(error_message)
+    #     role, response = get_role_and_content(response)
+    #     memory.append(user_id, role, response)
+    #     msg = TextSendMessage(text=response)
+    # except ValueError:
+    #     msg = TextSendMessage(text='最初に /token sk-xxxxx の形式でトークンを登録してください。')
+    # except KeyError:
+    #     msg = TextSendMessage(text='最初に /token sk-xxxxx の形式でトークンを登録してください。')
+    # except Exception as e:
+    #     memory.remove(user_id)
+    #     if str(e).startswith('Incorrect API key provided'):
+    #         msg = TextSendMessage(text='OpenAI API Token が正しくありません。/token sk-xxxxx の形式で登録してください。')
+    #     else:
+    #         msg = TextSendMessage(text=str(e))
+    # os.remove(input_audio_path)
+    msg = TextSendMessage(text="音声メッセージには対応していません。")
     line_bot_api.reply_message(event.reply_token, msg)
 
 
