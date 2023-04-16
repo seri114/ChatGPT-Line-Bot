@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from flask import Flask, request, abort
+from waitress import serve
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -212,4 +213,5 @@ if __name__ == "__main__":
             model_management[user_id] = OpenAIModel(api_key=data[user_id])
     except FileNotFoundError:
         pass
-    app.run(host='0.0.0.0', port=8080)
+    # app.run(host='0.0.0.0', port=8080)
+    serve(app, host='0.0.0.0', port=8080)
