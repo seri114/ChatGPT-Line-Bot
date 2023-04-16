@@ -259,9 +259,10 @@ def handle_text_message(event):
 
             memory.append(user_id, 'user', text)
             comp = memory.get(user_id)
-            last = comp[-1]
-            last["contents"]=wrap_msg(last["contents"])
+            last = comp.pop()
             logger.info("送信ログ:\n" + json.dumps(comp))
+            last["contents"]=wrap_msg(last["contents"])
+            comp.append(last)
             is_successful, response, error_message = user_model.chat_completions(comp, os.getenv('OPENAI_MODEL_ENGINE'))
             if not is_successful:
                 raise Exception(error_message)
@@ -274,8 +275,8 @@ def handle_text_message(event):
             memory.append(user_id, role, reply)
     except ValueError:
         msg = TextSendMessage(text='Token が無効です。以下のフォーマットで入力してください。 /token sk-xxxxx')
-    except KeyError:
-        msg = TextSendMessage(text='トークンを先に登録してください。/token sk-xxxxx の形式で登録してください。')
+    except KeyError as e:
+        msg = TextSendMessage(text=f'トークンを先に登録してください。/token sk-xxxxx の形式で登録してください。{e}')
     except Exception as e:
         memory.remove(user_id)
         if str(e).startswith('Incorrect API key provided'):
