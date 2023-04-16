@@ -88,7 +88,9 @@ def handle_text_message(event):
                 user_id: api_key
             })
         cmd = get_model(user_id).pop_command()
-        if cmd == OpenAIModelCmd.SET_TOKEN:
+        if text in ['/cancel']:
+            msg = TextSendMessage(text=f'キャンセルしました')
+        elif cmd == OpenAIModelCmd.SET_TOKEN:
             # api_key = text[3:].strip()
             # setup_token(user_id, api_key)
             api_key = text
@@ -142,12 +144,15 @@ def handle_text_message(event):
             get_model(user_id).set_command(OpenAIModelCmd.SET_TOKEN)
             # api_key = text[3:].strip()
             # setup_token(user_id, api_key)
-            msg = TextSendMessage(text='トークンを入力してください。')
+
+            quick_reply_menu = {"キャンセル":"/cancel"}
+            items = [QuickReplyButton(action=MessageAction(label=v, text=quick_reply_menu[v])) for k,v in enumerate(quick_reply_menu)]
+            msg = TextSendMessage(text='トークンを入力してください。', quick_reply=QuickReply(items=items))
         elif text.startswith('/reset_system_message'):
             system_prompt = text
             memory.change_system_message(user_id, system_message=os.getenv('SYSTEM_MESSAGE'))
             msg = TextSendMessage(text=f'システムメッセージを初期状態に戻しました。')
-        elif text == 'ヘルプ':
+        elif text in ['ヘルプ', '使い方']:
             quick_reply_menu = {"画像生成":"/image", "URLを要約": "/url", "システムメッセージ":"/system", "システムメッセージをリセット":"/reset_system_message", "履歴をクリア":"/clear", "トークンを入力":"/token"}
 
             items = [QuickReplyButton(action=MessageAction(label=v, text=quick_reply_menu[v])) for k,v in enumerate(quick_reply_menu)]
@@ -176,11 +181,22 @@ def handle_text_message(event):
 
         elif text.startswith('/clear'):
             memory.remove(user_id)
-            msg = TextSendMessage(text='履歴のクリアに成功しました。')
+            msg = TextSendMessage(text='履歴をクリアしました。')
 
         elif text.startswith('/image'):
             get_model(user_id).set_command(OpenAIModelCmd.SET_IMAGE_PROMPT)
-            msg = TextSendMessage(text='どんな画像を生成しますか？\n\n例 椅子の上に寝ている可愛い三毛猫の赤ちゃん')
+            quick_reply_menu = {
+                "キャンセル":"/cancel",
+                "椅子の上に寝ている可愛い三毛猫の赤ちゃん": None,
+                "ドラゴンがバラの花を持っている画像": None,
+                "巨大なクマがハンバーガーを食べている画像": None,
+                "カエルが宇宙服を着て月面でジャンプしている画像": None,
+                "本が自分自身を読んでいる画像": None,
+                "オフィスにいる女性が、机に置かれた植物を眺めている画像": None,
+                }
+            items = [QuickReplyButton(action=MessageAction(label=v, text=quick_reply_menu.get(v, v))) for k,v in enumerate(quick_reply_menu)]
+            msg = TextSendMessage(text='どんな画像を生成しますか？', quick_reply=QuickReply(items=items))
+
             # prompt = text[3:].strip()
             # memory.append(user_id, 'user', prompt)
             # is_successful, response, error_message = get_model(user_id).image_generations(prompt)
@@ -216,6 +232,24 @@ def handle_text_message(event):
             msg = TextSendMessage(text='同時使用人数を超えました。しばらく待ってからお試しください。')
         else:
             msg = TextSendMessage(text=str(e))
+    msg=("""
+    # 命令書：
+    あなたは、ChatGPTです。
+    以下の制約条件をもとに、返信および、それに対する質問者の返信例を出力してください。
+
+    # 制約条件：
+    ・文字数は300字程度
+    ・小学生にもわかりやすく
+    ・返信例は最大4つ。それぞれ20字以内
+    ・重要なキーワードを取り残さない
+    ・文章を簡潔に
+    # 入力分:
+    """ + msg +
+    """
+    # 出力文：
+    {"reply":"...","reply sample1":"...", ...}
+    """)[1:-1]
+    msg = TextSendMessage(text=textwrap.dedent(text))
     line_bot_api.reply_message(event.reply_token, msg)
 
 
