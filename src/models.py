@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List, Dict
 import requests
 
@@ -16,10 +17,18 @@ class ModelInterface:
         pass
 
 
+class OpenAIModelCmd(Enum):
+    NONE = 1
+    SET_TOKEN = 2
+    SET_SYSTEM_PROMPT = 3
+    SET_IMAGE_PROMPT = 4
+    SET_SUMMARIZE_URL = 5
 class OpenAIModel(ModelInterface):
+
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = 'https://api.openai.com/v1'
+        self.cmd = OpenAIModelCmd.NONE
 
     def _request(self, method, endpoint, body=None, files=None):
         self.headers = {
@@ -63,3 +72,11 @@ class OpenAIModel(ModelInterface):
             "size": "512x512"
         }
         return self._request('POST', '/images/generations', body=json_body)
+
+    def set_command(self, cmd: OpenAIModelCmd):
+        self.cmd = cmd
+    
+    def pop_command(self) -> OpenAIModelCmd:
+        cmd = self.cmd
+        self.cmd = OpenAIModelCmd.NONE
+        return cmd

@@ -13,7 +13,7 @@ from linebot.models import (
 import os
 import uuid
 
-from src.models import OpenAIModel
+from src.models import OpenAIModel, OpenAIModelCmd
 from src.memory import Memory
 from src.logger import logger
 from src.storage import Storage, FileStorage, MongoStorage
@@ -47,7 +47,7 @@ def setup_token(user_id: str, api_key:str):
         user_id: api_key
     })
 
-def get_model(user_id: str):
+def get_model(user_id: str) -> OpenAIModel:
     if user_id in model_management:
         return model_management[user_id]
     else:
@@ -86,24 +86,19 @@ def handle_text_message(event):
             storage.save({
                 user_id: api_key
             })
-        if text.startswith('/token'):
-            api_key = text[3:].strip()
+        cmd = get_model(user_id).pop_command()
+        if cmd == OpenAIModelCmd.SET_TOKEN:
+            # api_key = text[3:].strip()
+            # setup_token(user_id, api_key)
+            api_key = text
             setup_token(user_id, api_key)
-            msg = TextSendMessage(text='Token Enabled.')
-
-        elif text.startswith('/help'):
-            msg = TextSendMessage(text="説明：\n/token + API Token\n👉API Tokenは、https://platform.openai.com/ に登録することで取得できます。\n\n/system + Prompt\n👉 Prompt 要約が得意な人になってもらうなど、ある役割をロボットに命令することができます\n\n/clear\n👉 現在、それぞれのケースで過去2回の履歴が記録されていますが、このコマンドは履歴情報をクリアするものです。\n\n/image + Prompt\n👉 DALL∙E 2 モデルを使ってテキストから画像を生成します。\n\n音声入力\n👉 Whisperモデルが呼び出されて音声がテキストに変換され、次にChatGPTが呼び出されてテキストで返信されます。\n\nその他のテキスト入力\n👉 ChatGPTに文字を入力")
-
-        elif text.startswith('/system'):
-            memory.change_system_message(user_id, text[5:].strip())
-            msg = TextSendMessage(text='システムプロンプトを入力しました。')
-
-        elif text.startswith('/clear'):
-            memory.remove(user_id)
-            msg = TextSendMessage(text='履歴のクリアに成功しました。')
-
-        elif text.startswith('/image'):
-            prompt = text[3:].strip()
+            msg = TextSendMessage(text=f'トークンを入力しました。¥n{api_key}')
+        elif cmd == OpenAIModelCmd.SET_SYSTEM_PROMPT:
+            system_prompt = text
+            memory.change_system_message(user_id, system_message=system_prompt)
+            msg = TextSendMessage(text=f'システムプロンプトを変更しました:¥n{system_prompt}')
+        elif cmd == OpenAIModelCmd.SET_IMAGE_PROMPT:
+            prompt = text
             memory.append(user_id, 'user', prompt)
             is_successful, response, error_message = get_model(user_id).image_generations(prompt)
             if not is_successful:
@@ -114,8 +109,7 @@ def handle_text_message(event):
                 preview_image_url=url
             )
             memory.append(user_id, 'assistant', url)
-
-        else:
+        elif cmd == OpenAIModelCmd.SET_SUMMARIZE_URL:
             user_model = get_model(user_id)
             memory.append(user_id, 'user', text)
             url = website.get_url_from_text(text)
@@ -141,11 +135,52 @@ def handle_text_message(event):
                     role, response = get_role_and_content(response)
                     msg = TextSendMessage(text=response)
             else:
-                is_successful, response, error_message = user_model.chat_completions(memory.get(user_id), os.getenv('OPENAI_MODEL_ENGINE'))
-                if not is_successful:
-                    raise Exception(error_message)
-                role, response = get_role_and_content(response)
-                msg = TextSendMessage(text=response)
+                msg = TextSendMessage(text="入力された内容はURLではありませんでした。")
+            memory.append(user_id, role, response)
+        elif text.startswith('/token'):
+            get_model(user_id).set_command(OpenAIModelCmd.SET_TOKEN)
+            # api_key = text[3:].strip()
+            # setup_token(user_id, api_key)
+            msg = TextSendMessage(text='トークンを入力してください。')
+
+        elif text.startswith('/help'):
+            msg = TextSendMessage(text="説明：\n/token + API Token\n👉API Tokenは、https://platform.openai.com/ に登録することで取得できます。\n\n/system + Prompt\n👉 Prompt 要約が得意な人になってもらうなど、ある役割をロボットに命令することができます\n\n/clear\n👉 現在、それぞれのケースで過去2回の履歴が記録されていますが、このコマンドは履歴情報をクリアするものです。\n\n/image + Prompt\n👉 DALL∙E 2 モデルを使ってテキストから画像を生成します。\n\n音声入力\n👉 Whisperモデルが呼び出されて音声がテキストに変換され、次にChatGPTが呼び出されてテキストで返信されます。\n\nその他のテキスト入力\n👉 ChatGPTに文字を入力")
+
+        elif text.startswith('/system'):
+            get_model(user_id).set_command(OpenAIModelCmd.SET_SYSTEM_PROMPT)
+            msg = TextSendMessage(text='システムプロンプトを入力してください。')
+            # memory.change_system_message(user_id, text[5:].strip())
+            # msg = TextSendMessage(text='システムプロンプトを入力しました。')
+
+        elif text.startswith('/clear'):
+            memory.remove(user_id)
+            msg = TextSendMessage(text='履歴のクリアに成功しました。')
+
+        elif text.startswith('/image'):
+            get_model(user_id).set_command(OpenAIModelCmd.SET_IMAGE_PROMPT)
+            msg = TextSendMessage(text='画像のプロンプトを入力してください。')
+            # prompt = text[3:].strip()
+            # memory.append(user_id, 'user', prompt)
+            # is_successful, response, error_message = get_model(user_id).image_generations(prompt)
+            # if not is_successful:
+            #     raise Exception(error_message)
+            # url = response['data'][0]['url']
+            # msg = ImageSendMessage(
+            #     original_content_url=url,
+            #     preview_image_url=url
+            # )
+            # memory.append(user_id, 'assistant', url)
+        elif text.startswith('/url'):
+            get_model(user_id).set_command(OpenAIModelCmd.SET_SUMMARIZE_URL)
+            msg = TextSendMessage(text='要約するURLを入力してください。')
+        else:
+            user_model = get_model(user_id)
+            memory.append(user_id, 'user', text)
+            is_successful, response, error_message = user_model.chat_completions(memory.get(user_id), os.getenv('OPENAI_MODEL_ENGINE'))
+            if not is_successful:
+                raise Exception(error_message)
+            role, response = get_role_and_content(response)
+            msg = TextSendMessage(text=response)
             memory.append(user_id, role, response)
     except ValueError:
         msg = TextSendMessage(text='Token が無効です。以下のフォーマットで入力してください。 /token sk-xxxxx')
@@ -213,5 +248,8 @@ if __name__ == "__main__":
             model_management[user_id] = OpenAIModel(api_key=data[user_id])
     except FileNotFoundError:
         pass
+    host = '0.0.0.0'
+    port = "8080"
     # app.run(host='0.0.0.0', port=8080)
-    serve(app, host='0.0.0.0', port=8080)
+    logger.info(f"start listening: {host}:{port}")
+    serve(app, host=host, port=port)
