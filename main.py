@@ -261,6 +261,7 @@ def handle_text_message(event):
             if not is_successful:
                 raise Exception(error_message)
             role, response = get_role_and_content(response)
+            logger.info("受信:\n" + response)
             reply, samples = get_reply_and_reply_samples(response)
             logger.info(f"{reply} {samples}")
             items = [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=s)) for s in samples]
