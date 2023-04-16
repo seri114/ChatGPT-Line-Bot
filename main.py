@@ -150,7 +150,7 @@ def handle_text_message(event):
         elif text == 'ヘルプ':
             quick_reply_menu = {"画像生成":"/image", "URLを要約": "/url", "システムメッセージ":"/system", "システムメッセージをリセット":"/reset_system_message", "履歴をクリア":"/clear", "トークンを入力":"/token"}
 
-            items = [QuickReplyButton(action=MessageAction(label=k, text=v)) for k,v in enumerate(quick_reply_menu)]
+            items = [QuickReplyButton(action=MessageAction(label=v, text=quick_reply_menu[v])) for k,v in enumerate(quick_reply_menu)]
             
             msg = TextSendMessage(text="何をしましょうか。",
                                     quick_reply=QuickReply(items=items))
