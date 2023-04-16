@@ -74,7 +74,7 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_text_message(event):
     user_id = event.source.user_id
-    text = event.message.text.strip()
+    text = str(event.message.text.strip())
     logger.info(f'{user_id}: {text}')
 
     try:
@@ -147,44 +147,12 @@ def handle_text_message(event):
             system_prompt = text
             memory.change_system_message(user_id, system_message=os.getenv('SYSTEM_MESSAGE'))
             msg = TextSendMessage(text=f'システムメッセージを初期状態に戻しました。')
-        elif text.startswith('/help2'):
-            msg={
-                "type": "text",
-                "text": "Select your favorite food category or send me your location!",
-                "quickReply": {
-                    "items": [
-                    {
-                        "type": "action",
-                        "imageUrl": "https://example.com/sushi.png",
-                        "action": {
-                        "type": "message",
-                        "label": "Sushi",
-                        "text": "Sushi"
-                        }
-                    },
-                    {
-                        "type": "action",
-                        "imageUrl": "https://example.com/tempura.png",
-                        "action": {
-                        "type": "message",
-                        "label": "Tempura",
-                        "text": "Tempura"
-                        }
-                    },
-                    {
-                        "type": "action",
-                        "action": {
-                        "type": "location",
-                        "label": "Send location"
-                        }
-                    }
-                    ]
-                }
-            }
-            language_list = ["Ruby", "Python", "PHP", "Java", "C"]
-            items = [QuickReplyButton(action=MessageAction(label=f"{language}", text=f"{language}が好き")) for language in language_list]
+        elif text == 'ヘルプ':
+            quick_reply_menu = {"画像生成":"/image", "URLを要約": "/url", "システムメッセージ":"/system", "システムメッセージをリセット":"/reset_system_message", "履歴をクリア":"/clear", "トークンを入力":"/token"}
+
+            items = [QuickReplyButton(action=MessageAction(label=k, text=v)) for k,v in enumerate(quick_reply_menu)]
             
-            msg = TextSendMessage(text="どの言語が好きですか？",
+            msg = TextSendMessage(text="何をしましょうか。",
                                     quick_reply=QuickReply(items=items))
         elif text.startswith('/help'):
             text = '''
