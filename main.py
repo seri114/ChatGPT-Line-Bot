@@ -279,10 +279,10 @@ def handle_text_message(event):
             else:
                 msg = TextSendMessage(text=reply)
             memory.append(user_id, role, reply)
-    except ValueError:
-        msg = TextSendMessage(text='Token が無効です。以下のフォーマットで入力してください。 /token sk-xxxxx')
+    except ValueError as e:
+        msg = TextSendMessage(text=f'Token が無効です。以下のフォーマットで入力してください。 /token sk-xxxxx {str(e)}')
     except KeyError as e:
-        msg = TextSendMessage(text=f'トークンを先に登録してください。/token sk-xxxxx の形式で登録してください。{e}')
+        msg = TextSendMessage(text=f'トークンを先に登録してください。/token sk-xxxxx の形式で登録してください。{str(e)}')
     except Exception as e:
         memory.remove(user_id)
         if str(e).startswith('Incorrect API key provided'):
