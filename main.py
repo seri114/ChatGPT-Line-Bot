@@ -1,3 +1,4 @@
+import textwrap
 from dotenv import load_dotenv
 from flask import Flask, request, abort
 from waitress import serve
@@ -155,7 +156,7 @@ def handle_text_message(event):
             /url 指定したURLを要約します。
             /clear ２つ前までの履歴をChatGPTに入れてますが、その履歴をクリアします。
             '''[1:-1]
-            msg = TextSendMessage(text=text)
+            msg = TextSendMessage(text=textwrap.dedent(text))
 
         elif text.startswith('/system'):
             get_model(user_id).set_command(OpenAIModelCmd.SET_SYSTEM_PROMPT)
