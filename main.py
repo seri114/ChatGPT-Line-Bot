@@ -261,7 +261,7 @@ def handle_text_message(event):
             role, response = get_role_and_content(response)
             reply, samples = get_reply_and_reply_samples(response)
             logger.info(f"{reply} {samples}")
-            items = [QuickReplyButton(action=MessageAction(label=s[:15]+".." if len(s)>15 else s, text=s)) for s in samples]
+            items = [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=s)) for s in samples]
             msg = TextSendMessage(text=reply, quick_reply=QuickReply(items=items))
             memory.append(user_id, role, reply)
     except ValueError:
