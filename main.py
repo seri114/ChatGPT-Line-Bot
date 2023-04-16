@@ -262,7 +262,7 @@ def handle_text_message(event):
             reply, samples = get_reply_and_reply_samples(response)
             logger.info(f"{reply} {samples}")
             items = [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=s)) for s in samples]
-            msg = TextSendMessage(text=reply, quick_reply=QuickReply(items=items))
+            msg = TextSendMessage(text=reply, quick_reply=QuickReply(items=items) if len(items) > 0 else None)
             memory.append(user_id, role, reply)
     except ValueError:
         msg = TextSendMessage(text='Token が無効です。以下のフォーマットで入力してください。 /token sk-xxxxx')
