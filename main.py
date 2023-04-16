@@ -85,7 +85,7 @@ def handle_text_message(event):
         pattern = r'{.*}'
 
         # 正規表現にマッチする部分を抽出
-        match = re.search(pattern, json_data)
+        match = re.search(pattern, string_with_json)
 
         if match:
             json_data = match.group()
