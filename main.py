@@ -212,12 +212,11 @@ def handle_text_message(event):
             get_model(user_id).set_command(OpenAIModelCmd.SET_IMAGE_PROMPT)
             quick_reply_menu = {
                 "キャンセル":"/cancel",
-                "椅子の上に寝ている可愛い三毛猫の赤ちゃん": None,
-                "ドラゴンがバラの花を持っている画像": None,
-                "巨大なクマがハンバーガーを食べている": None,
-                "宇宙服を着たカエルが月面でジャンプ": None,
-                "本が自分自身を読んでいる画像": None,
-                "オフィスの女性が机の植物を眺める画像": None,
+                "panda on moon": None,
+                "panda on moon photo": None,
+                "Frog jump in bath": None,
+                "panda cherry room": None,
+                "book read yourself": None,
                 }
             items = [QuickReplyButton(action=MessageAction(label=v, text=(quick_reply_menu.get(v) or v))) for k,v in enumerate(quick_reply_menu)]
             msg = TextSendMessage(text='どんな画像を生成しますか？', quick_reply=QuickReply(items=items))
