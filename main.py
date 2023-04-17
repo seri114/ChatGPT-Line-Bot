@@ -126,6 +126,7 @@ def handle_text_message(event):
             msg = TextSendMessage(text=f'システムメッセージを変更しました:\n{system_prompt}')
         elif cmd == OpenAIModelCmd.SET_IMAGE_PROMPT:
             prompt = text
+            logger.info(f"image {text}")
             memory.append(user_id, 'user', prompt)
             is_successful, response, error_message = get_model(user_id).image_generations(prompt)
             if not is_successful:
