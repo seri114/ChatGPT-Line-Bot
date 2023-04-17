@@ -217,7 +217,7 @@ def handle_text_message(event):
                 "巨大なクマがハンバーガーを食べている画像": None,
                 "カエルが宇宙服を着て月面でジャンプしている画像": None,
                 "本が自分自身を読んでいる画像": None,
-                "オフィスにいる女性が、机に置かれた植物を眺めている画像": None,
+                "オフィスにいる女性が机の植物を眺める画像": None,
                 }
             items = [QuickReplyButton(action=MessageAction(label=v, text=(quick_reply_menu.get(v) or v))) for k,v in enumerate(quick_reply_menu)]
             msg = TextSendMessage(text='どんな画像を生成しますか？', quick_reply=QuickReply(items=items))
