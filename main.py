@@ -174,7 +174,12 @@ def handle_text_message(event):
                     if not is_successful:
                         raise Exception(error_message)
                     role, response = get_role_and_content(response)
-                    msg = TextSendMessage(text=response)
+                    quick_reply_menu = {
+                        "続けてURLを入力":"/url",
+                        "ヘルプ":"ヘルプ",
+                    }
+                    items = [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=(quick_reply_menu.get(s) or s))) for k,s in enumerate(quick_reply_menu)]
+                    msg = TextSendMessage(text=response, quick_reply=QuickReply(items=items))
                 else:
                     chunks = website.get_content_from_url(url)
                     if len(chunks) == 0:
@@ -184,9 +189,20 @@ def handle_text_message(event):
                     if not is_successful:
                         raise Exception(error_message)
                     role, response = get_role_and_content(response)
-                    msg = TextSendMessage(text=response)
+
+                    quick_reply_menu = {
+                        "続けてURLを入力":"/url",
+                        "ヘルプ":"ヘルプ",
+                    }
+                    items = [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=(quick_reply_menu.get(s) or s))) for k,s in enumerate(quick_reply_menu)]
+                    msg = TextSendMessage(text=response, quick_reply=QuickReply(items=items))
             else:
-                msg = TextSendMessage(text="入力された内容はURLではありませんでした。")
+                quick_reply_menu = {
+                    "続けてURLを入力":"/url",
+                    "ヘルプ":"ヘルプ",
+                }
+                items = [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=(quick_reply_menu.get(s) or s))) for k,s in enumerate(quick_reply_menu)]
+                msg = TextSendMessage(text="入力された内容はURLではありませんでした。", quick_reply=QuickReply(items=items))
             memory.append(user_id, role, response)
         elif text.startswith('/token'):
             get_model(user_id).set_command(OpenAIModelCmd.SET_TOKEN)
