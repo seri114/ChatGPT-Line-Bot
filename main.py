@@ -83,9 +83,11 @@ def follow_event(event):
     できることを一通り知りたければ、「ヘルプ」と入力してください。
     '''[1:-1]
     text = textwrap.dedent(text)
+    user_id = event.source.user_id
     quick_reply_menu = {"ヘルプ":"ヘルプ", "何を聞けば良い？":"何を聞けば良い？", "明日の天気は？":"明日の天気は？"}
     items = [QuickReplyButton(action=MessageAction(label=v, text=quick_reply_menu[v])) for k,v in enumerate(quick_reply_menu)]
     msg = TextSendMessage(text=str(text), quick_reply=QuickReply(items=items))
+    memory.remove(user_id)
     line_bot_api.reply_message(event.reply_token, msg)
 
 
@@ -289,14 +291,14 @@ def handle_text_message(event):
             last = comp.pop()
             last["content"]=wrap_msg(last["content"])
             comp.append(last)
-            logger.info("送信ログ:\n" + json.dumps(comp))
+            # logger.info("送信ログ:\n" + json.dumps(comp))
             is_successful, response, error_message = user_model.chat_completions(comp, os.getenv('OPENAI_MODEL_ENGINE'))
             if not is_successful:
                 raise Exception(error_message)
             role, response = get_role_and_content(response)
-            logger.info("受信:\n" + response)
+            logger.info(response)
             reply, samples = get_reply_and_reply_samples(response)
-            logger.info(f"{reply} {samples}")
+            # logger.info(f"{reply} {samples}")
             items = [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=s)) for s in samples]
             if len(items)>0:
                 msg = TextSendMessage(text=reply, quick_reply=QuickReply(items=items))
@@ -304,9 +306,11 @@ def handle_text_message(event):
                 msg = TextSendMessage(text=reply)
             memory.append(user_id, role, reply)
     except ValueError as e:
-        msg = TextSendMessage(text=f'Token が無効です。以下のフォーマットで入力してください。 /token sk-xxxxx {str(e)}')
+        logger.info(f'例外が発生しました。{str(e)}')
+        msg = TextSendMessage(text=f'例外が発生しました。{str(e)}')
     except KeyError as e:
-        msg = TextSendMessage(text=f'トークンを先に登録してください。/token sk-xxxxx の形式で登録してください。{str(e)}')
+        logger.info(f'例外が発生しました。{str(e)}')
+        msg = TextSendMessage(text=f'例外が発生しました。{str(e)}')
     except Exception as e:
         memory.remove(user_id)
         if str(e).startswith('Incorrect API key provided'):
