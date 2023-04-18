@@ -296,7 +296,11 @@ def handle_text_message(event):
             logger.info(response)
             reply, samples = get_reply_and_reply_samples(response)
             # logger.info(f"{reply} {samples}")
-            items = [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=s)) for s in samples]
+            quick_reply_menu = {
+                "ヘルプ":"ヘルプ"
+            }
+            items = [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=(quick_reply_menu.get(s) or s))) for k,s in enumerate(quick_reply_menu)]
+            items += [QuickReplyButton(action=MessageAction(label=((s[:15]+"..") if len(s)>15 else s), text=s)) for s in samples]
             if len(items)>0:
                 msg = TextSendMessage(text=reply, quick_reply=QuickReply(items=items))
             else:
